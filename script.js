@@ -61,7 +61,7 @@ const inputLoanAmount = document.querySelector(".form__input--loan-amount");
 const inputCloseUsername = document.querySelector(".form__input--user");
 const inputClosePin = document.querySelector(".form__input--pin");
 
-const displayMovements = (movements) => {
+const displayMovements = ({ movements }) => {
   containerMovements.innerHTML = "";
 
   movements.forEach((movement, index) => {
@@ -78,10 +78,10 @@ const displayMovements = (movements) => {
   });
 };
 
-const calcDisplayBalance = (movements) => {
-  const balance = movements.reduce((acc, cur) => acc + cur, 0);
+const calcDisplayBalance = (acc) => {
+  acc.balance = acc.movements.reduce((acc, cur) => acc + cur, 0);
 
-  labelBalance.textContent = `${balance} €`;
+  labelBalance.textContent = `${acc.balance} €`;
 };
 
 const calcDisplaySummary = ({ movements, interestRate }) => {
@@ -116,7 +116,18 @@ const createUsernames = (accounts) => {
 
 createUsernames(accounts);
 
-//Event Login Handler
+const updateUI = (currentAccount) => {
+  //Display movements
+  displayMovements(currentAccount);
+
+  //Display Balance
+  calcDisplayBalance(currentAccount);
+
+  //Display Summary
+  calcDisplaySummary(currentAccount);
+};
+
+//Event Handler
 let currentAccount;
 
 btnLogin.addEventListener("click", (event) => {
@@ -126,7 +137,7 @@ btnLogin.addEventListener("click", (event) => {
     (account) => account.username === inputLoginUsername.value
   );
 
-  if (currentAccount?.pin === parseInt(inputLoginPin.value)) {
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
     //Display UI & Message
     labelWelcome.textContent = `Welcome Back, ${currentAccount.owner
       .split(" ")
@@ -138,14 +149,31 @@ btnLogin.addEventListener("click", (event) => {
     inputLoginUsername.value = inputLoginPin.value = "";
     inputLoginPin.blur();
 
-    //Display movements
-    displayMovements(currentAccount.movements);
-
-    //Display Balance
-    calcDisplayBalance(currentAccount.movements);
-
-    //Display Summary
-    calcDisplaySummary(currentAccount);
+    //Update UI
+    updateUI(currentAccount);
   }
-  console.log(currentAccount);
+});
+
+btnTransfer.addEventListener("click", (event) => {
+  event.preventDefault();
+
+  const amount = Number(inputTransferAmount.value);
+  const receiverAcc = accounts.find(
+    (account) => account.username === inputTransferTo.value
+  );
+
+  inputTransferAmount.value = inputTransferTo.value = "";
+
+  if (
+    amount > 0 &&
+    receiverAcc &&
+    currentAccount.balance >= amount &&
+    receiverAcc?.username !== currentAccount.username
+  ) {
+    currentAccount.movements.push(-amount);
+    receiverAcc.movements.push(amount);
+
+    //Update UI
+    updateUI(currentAccount);
+  }
 });
