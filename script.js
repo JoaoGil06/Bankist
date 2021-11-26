@@ -78,17 +78,13 @@ const displayMovements = (movements) => {
   });
 };
 
-displayMovements(account1.movements);
-
 const calcDisplayBalance = (movements) => {
   const balance = movements.reduce((acc, cur) => acc + cur, 0);
 
   labelBalance.textContent = `${balance} €`;
 };
 
-calcDisplayBalance(account1.movements);
-
-const calcDisplaySummary = (movements) => {
+const calcDisplaySummary = ({ movements, interestRate }) => {
   const incomes = movements
     .filter((movement) => movement > 0)
     .reduce((acc, movement) => acc + movement, 0);
@@ -99,7 +95,7 @@ const calcDisplaySummary = (movements) => {
 
   const interest = movements
     .filter((movement) => movement > 0)
-    .map((movement) => (movement * 1.2) / 100)
+    .map((movement) => (movement * interestRate) / 100)
     .filter((int) => int >= 1)
     .reduce((acc, movement) => acc + movement, 0);
 
@@ -107,8 +103,6 @@ const calcDisplaySummary = (movements) => {
   labelSumOut.textContent = `${out}€`;
   labelSumInterest.textContent = `${interest}€`;
 };
-
-calcDisplaySummary(account1.movements);
 
 const createUsernames = (accounts) => {
   accounts.forEach((account) => {
@@ -121,3 +115,37 @@ const createUsernames = (accounts) => {
 };
 
 createUsernames(accounts);
+
+//Event Login Handler
+let currentAccount;
+
+btnLogin.addEventListener("click", (event) => {
+  event.preventDefault();
+
+  currentAccount = accounts.find(
+    (account) => account.username === inputLoginUsername.value
+  );
+
+  if (currentAccount?.pin === parseInt(inputLoginPin.value)) {
+    //Display UI & Message
+    labelWelcome.textContent = `Welcome Back, ${currentAccount.owner
+      .split(" ")
+      .at(0)}`;
+
+    containerApp.style.opacity = 100;
+
+    // Clear input fields
+    inputLoginUsername.value = inputLoginPin.value = "";
+    inputLoginPin.blur();
+
+    //Display movements
+    displayMovements(currentAccount.movements);
+
+    //Display Balance
+    calcDisplayBalance(currentAccount.movements);
+
+    //Display Summary
+    calcDisplaySummary(currentAccount);
+  }
+  console.log(currentAccount);
+});
