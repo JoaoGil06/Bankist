@@ -61,10 +61,12 @@ const inputLoanAmount = document.querySelector(".form__input--loan-amount");
 const inputCloseUsername = document.querySelector(".form__input--user");
 const inputClosePin = document.querySelector(".form__input--pin");
 
-const displayMovements = ({ movements }) => {
+const displayMovements = ({ movements }, sort = false) => {
   containerMovements.innerHTML = "";
 
-  movements.forEach((movement, index) => {
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+
+  movs.forEach((movement, index) => {
     const movementType = movement > 0 ? "deposit" : "withdrawal";
     const html = `
         <div class="movements__row">
@@ -178,6 +180,25 @@ btnTransfer.addEventListener("click", (event) => {
   }
 });
 
+btnLoan.addEventListener("click", (event) => {
+  event.preventDefault();
+
+  const amount = Number(inputLoanAmount.value);
+
+  if (
+    amount > 0 &&
+    currentAccount.movements.some((mov) => mov >= amount * 0.1)
+  ) {
+    // Add movement
+    currentAccount.movements.push(amount);
+
+    //Update UI
+    updateUI(currentAccount);
+  }
+
+  inputLoanAmount.value = "";
+});
+
 btnClose.addEventListener("click", (event) => {
   event.preventDefault();
 
@@ -197,4 +218,12 @@ btnClose.addEventListener("click", (event) => {
   }
 
   inputCloseUsername.value = inputClosePin.value = "";
+});
+
+let sorted = false;
+btnSort.addEventListener("click", (event) => {
+  event.preventDefault();
+
+  displayMovements(currentAccount, sorted);
+  sorted = !sorted;
 });
